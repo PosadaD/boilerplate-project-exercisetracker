@@ -113,8 +113,8 @@ app.get("/api/users", (async(req, res)=>{
   res.json(users);
 }))
 
-
-app.post("/api/users/:_id/exercises", async(req, res)=>{
+app.route("/api/users/:_id/exercises")
+.post(async(req, res)=>{
   //revisar si existe el usuario
   const usuario = await user.findById(req.params._id);
   if(usuario){
@@ -148,6 +148,53 @@ app.post("/api/users/:_id/exercises", async(req, res)=>{
     res.send("no existe ususario")
     return
   }
+})
+
+
+app.route("/api/users/:_id/logs")
+//endpoint para obtener los ejercicios del usuario 
+.get(async(req, res)=>{
+  //obtener el usuario
+  const {from, to, limit} = req.query;
+
+  //filtro por querys en url
+  let objDate = {}
+  let filtro = {
+    user_id: req.params._id
+  }
+  if(from){
+    objDate["$gte"] = new Date(from);
+  }
+  if(to){
+    objDate["$lte"] = new Date(to);
+  }
+  if(from || to){
+    filtro["date"] = objDate;
+  }
+
+  //console.log(filtro)
+  
+  const usuario = await exercise.findOne({user_id: req.params._id})
+  
+  //validar usuario
+  if(usuario){
+    //obtener lista de ejercicios 
+    const exerciseList = await (await exercise.find(filtro).limit(parseInt(limit))).map(item => ({
+      "description": item.description,
+      "duration": Number(item.duration),
+      "date": item.date.toDateString()
+    }))
+    //responder los logs del usuario
+    res.json({
+      username: usuario.username,
+      count: exerciseList.length,
+      user_id: usuario._id,
+      log: exerciseList
+    })
+  }else {
+    res.send("usuario no encontrado")
+  }
+  
 })
 
 
