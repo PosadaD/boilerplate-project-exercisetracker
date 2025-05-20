@@ -3,6 +3,7 @@ const app = express()
 const cors = require('cors')
 require('dotenv').config()
 const mongoose = require('mongoose')
+const { format } = require('date-fns');
 
 app.use(cors())
 app.use(express.json())
@@ -25,17 +26,19 @@ const userSchema = {
 }
 
 const exerciseSchema = {
+  user_id: {
+    type: String,
+    required: true
+  },
   username: {
     type: String,
-    required: true,
-    unique: true 
+    required: true
   },
   description: {
-    type: String,
+    type: String
   },
   duration: {
-    type: String, 
-    required: true
+    type: String
   },
   date: {
     type: Date, 
@@ -66,15 +69,16 @@ const logSchema = {
 }
 
 
+exerciseSchema.col
+
+
 const user = mongoose.model("user", userSchema);
 const exercise = mongoose.model("exercise", exerciseSchema);
 const log = mongoose.model("log", logSchema);
 
 
-app.route("/api/users")
-
 //endpoint para agregar usuarios
-.post(async(req, res)=>{
+app.post("/api/users",(async(req, res)=>{ 
   req.username = req.body.username
   
   //revisar si existe el usuario registrado 
@@ -95,13 +99,54 @@ app.route("/api/users")
   }
   //responder en json con la informacion del usuario
   res.json(usuario);
-})
+}))
+
 
 //endpoint para obtener usuarios
-.get(async(req, res)=>{
+app.get("/api/users", (async(req, res)=>{ 
+  //consultar usuarios
   const users = await user.find()
+  //responder usuarios
   res.json(users);
+}))
+
+
+app.post("/api/users/:_id/exercises", async(req, res)=>{
+  //revisar si existe el usuario
+  const usuario = await user.findById(req.params._id);
+  if(usuario){
+    try{
+
+      const {description, duration, date} = req.body
+
+      const newExercise = new exercise({
+        user_id: usuario._id,
+        username: usuario.username,
+        description,
+        duration,
+        date: date ? new Date(date) : new Date()
+      })
+      //guardar datos
+      const added = await newExercise.save()
+      if(added) console.log("ejercicio agregado");
+      //obtener datos guardados
+      res.json({
+        _id: added.user_id,
+        username: added.username,
+        description: added.description,
+        duration: parseInt(added.duration),
+        date: new Date(added.date).toDateString(),
+      });
+    }
+    catch(error){
+      console.log(error)
+    }
+  }else{ 
+    res.send("no existe ususario")
+    return
+  }
 })
+
 
 
 const listener = app.listen(process.env.PORT || 3000, () => {
