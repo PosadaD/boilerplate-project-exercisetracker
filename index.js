@@ -50,10 +50,13 @@ const exerciseSchema = {
 const logSchema = {
     username: {
       type: String,
-      required: true
     },
     count: {
       type: Number
+    },
+    user_id: {
+      type: String,
+      required: true
     },
     log: [{
       description: {
