@@ -71,8 +71,9 @@ const exercise = mongoose.model("exercise", exerciseSchema);
 const log = mongoose.model("log", logSchema);
 
 
-//endpoint para agregar usuarios
 app.route("/api/users")
+
+//endpoint para agregar usuarios
 .post(async(req, res)=>{
   req.username = req.body.username
   
@@ -92,13 +93,15 @@ app.route("/api/users")
       console.log(error);
     }
   }
-
   //responder en json con la informacion del usuario
   res.json(usuario);
 })
 
-
-
+//endpoint para obtener usuarios
+.get(async(req, res)=>{
+  const users = await user.find()
+  res.json(users);
+})
 
 
 const listener = app.listen(process.env.PORT || 3000, () => {
